@@ -1,23 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, Lock } from "lucide-react";
-import { initData } from "../../data/store";
+import { ArrowLeft, GraduationCap, Lock } from "lucide-react";
+import { login } from "../../data/api";
+import { useAuth } from "../../data/useAuth";
 
 export default function Login() {
-  const [user, setUser] = useState("");
+  const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
   const nav = useNavigate();
+  const { loading: authLoading, isAdmin } = useAuth();
 
-  const handleLogin = (e) => {
+  useEffect(() => {
+    if (!authLoading && isAdmin) nav('/admin/dashboard', { replace: true });
+  }, [authLoading, isAdmin, nav]);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    initData();
-    const admin = JSON.parse(localStorage.getItem("admin"));
-    if (user === admin.username && pass === admin.password) {
-      localStorage.setItem("isLoggedIn", "true");
+    setErr("");
+    setLoading(true);
+    try {
+      await login(email, pass);
       nav("/admin/dashboard");
-    } else {
-      setErr("Username atau password salah.");
+    } catch (error) {
+      setErr(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -36,26 +45,26 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleLogin} className="p-8 md:p-10">
+          <button type="button" onClick={() => nav('/')} className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-primary-600 hover:underline"><ArrowLeft size={16} /> Kembali ke halaman utama</button>
           <h1 className="font-display text-2xl font-extrabold text-primary-900">Masuk Admin</h1>
-          <p className="mt-1 text-sm text-ink/50">Kelola berita dan galeri sekolah dari sini.</p>
+          <p className="mt-1 text-sm text-ink/50">Kelola seluruh konten website sekolah dari sini.</p>
 
           {err && <p className="mt-4 rounded-xl bg-honey-100 px-4 py-2 text-sm font-bold text-honey-800">{err}</p>}
 
-          <label className="mt-6 block text-sm font-bold text-ink/70">Username</label>
+          <label className="mt-6 block text-sm font-bold text-ink/70">Email admin</label>
           <input
+            required type="email" autoComplete="email"
             className="mt-1 w-full rounded-xl border border-primary-200 bg-white px-4 py-2.5 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
-            placeholder="admin" value={user} onChange={(e) => setUser(e.target.value)}
+            placeholder="admin@sekolah.sch.id" value={email} onChange={(e) => setEmail(e.target.value)}
           />
           <label className="mt-4 block text-sm font-bold text-ink/70">Password</label>
           <input
-            type="password"
+            required type="password" autoComplete="current-password"
             className="mt-1 w-full rounded-xl border border-primary-200 bg-white px-4 py-2.5 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
             placeholder="••••••" value={pass} onChange={(e) => setPass(e.target.value)}
           />
-          <button type="submit" className="btn btn-primary mt-6 w-full"><Lock size={16} /> Masuk</button>
-          <p className="mt-4 rounded-xl bg-primary-50 px-4 py-2 text-center text-xs text-ink/50">
-            Akun bawaan: <b>admin</b> / <b>sdn027</b>
-          </p>
+          <button type="submit" disabled={loading} className="btn btn-primary mt-6 w-full disabled:cursor-wait disabled:opacity-70"><Lock size={16} /> {loading ? "Memproses…" : "Masuk"}</button>
+          <p className="mt-4 text-center text-xs text-ink/50">Gunakan akun yang diberikan oleh pengelola website.</p>
         </form>
       </div>
     </div>

@@ -1,9 +1,12 @@
+import { useEffect, useState } from "react";
 import { Camera } from "lucide-react";
 import SectionHead from "../components/SectionHead";
-import { getGallery } from "../data/store";
+import { getGallery } from "../data/api";
 
 export default function Galeri() {
-  const gallery = getGallery();
+  const [gallery, setGallery] = useState([]);
+  const [error, setError] = useState("");
+  useEffect(() => { getGallery().then(setGallery).catch((requestError) => setError(requestError.message)); }, []);
   return (
     <div className="container-page py-14 md:py-20">
       <SectionHead
@@ -11,7 +14,7 @@ export default function Galeri() {
         title="Galeri Sekolah"
         sub="Potret kegiatan belajar, acara, dan suasana sehari-hari di lingkungan SDN 027 Balikpapan Utara."
       />
-      <div className="grid auto-rows-[160px] grid-cols-2 gap-4 md:auto-rows-[180px] md:grid-cols-4">
+      {error ? <p role="alert" className="text-center text-red-600">{error}</p> : <div className="grid auto-rows-[160px] grid-cols-2 gap-4 md:auto-rows-[180px] md:grid-cols-4">
         {gallery.map((g, i) => (
           <figure
             key={g.id}
@@ -23,7 +26,7 @@ export default function Galeri() {
             </figcaption>
           </figure>
         ))}
-      </div>
+      </div>}
       <p className="mt-8 flex items-center justify-center gap-2 text-sm text-ink/50">
         <Camera size={16} /> Foto kegiatan baru akan terus ditambahkan oleh admin sekolah.
       </p>

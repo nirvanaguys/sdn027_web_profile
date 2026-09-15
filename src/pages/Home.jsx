@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { BookOpen, HeartHandshake, Trophy, Users, Target, CheckCircle2, ArrowRight, Star } from "lucide-react";
 import SectionHead from "../components/SectionHead";
 import NewsCard from "../components/NewsCard";
-import { getNews } from "../data/store";
+import { getContent, getNews } from "../data/api";
+import { defaultHome, mergeContent, normalizeHome } from "../data/content";
 
 const unggulan = [
   { icon: BookOpen, warna: "bg-primary-50 text-primary-600", judul: "Pendidikan Berkualitas", isi: "Kurikulum nasional dengan pendekatan pembelajaran yang menyenangkan dan bermakna." },
@@ -11,15 +13,11 @@ const unggulan = [
   { icon: Users, warna: "bg-primary-50 text-primary-600", judul: "Guru Profesional", isi: "Dibimbing oleh tenaga pendidik yang berkompeten dan penuh dedikasi." },
 ];
 
-const misi = [
-  "Menyelenggarakan pembelajaran aktif dan menyenangkan.",
-  "Membentuk karakter siswa yang berakhlak mulia.",
-  "Mengembangkan potensi akademik dan non-akademik.",
-  "Menciptakan lingkungan sekolah yang ramah dan inklusif.",
-];
-
 export default function Home() {
-  const berita = getNews().slice(0, 3);
+  const [berita, setBerita] = useState([]);
+  const [content, setContent] = useState(defaultHome);
+  useEffect(() => { getNews().then((items) => setBerita(items.slice(0, 3))).catch(() => setBerita([])); }, []);
+  useEffect(() => { getContent('home').then((data) => data && setContent(mergeContent(defaultHome, normalizeHome(data)))).catch(() => {}); }, []);
 
   return (
     <div>
@@ -32,10 +30,10 @@ export default function Home() {
           <div>
             <span className="eyebrow"><Star size={14} className="text-honey-500" /> Website Resmi Sekolah</span>
             <h1 className="mt-5 font-display text-4xl font-extrabold leading-tight text-primary-900 md:text-5xl">
-              SD Negeri 027 <span className="highlight">Balikpapan Utara</span>
+              {content.heroTitle}
             </h1>
             <p className="mt-5 max-w-xl leading-relaxed text-ink/70">
-              Mendidik generasi cerdas, berkarakter, dan berakhlak mulia melalui pembelajaran yang menyenangkan, bermakna, dan menginspirasi.
+              {content.heroText}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/profil" className="btn btn-primary">Profil Sekolah</Link>
@@ -45,13 +43,13 @@ export default function Home() {
 
           <div className="relative">
             <img
-              src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1200&q=80"
+              src={content.heroImage}
               alt="Suasana belajar di kelas"
               className="h-72 w-full rounded-4xl border-4 border-white object-cover shadow-xl md:h-96"
             />
             <div className="card absolute -bottom-5 -left-4 -rotate-3 px-5 py-3">
-              <p className="font-display text-xl font-extrabold text-honey-600">Akreditasi A</p>
-              <p className="text-xs font-bold text-ink/50">Sekolah Unggulan</p>
+              <p className="font-display text-xl font-extrabold text-honey-600">{content.accreditation}</p>
+              <p className="text-xs font-bold text-ink/50">{content.accreditationText}</p>
             </div>
           </div>
         </div>
@@ -59,7 +57,7 @@ export default function Home() {
         {/* Statistik */}
         <div className="container-page relative mt-14">
           <div className="grid grid-cols-2 gap-px overflow-hidden rounded-3xl bg-primary-100 shadow-sm md:grid-cols-4">
-            {[["30+", "Tahun Berdiri"], ["450+", "Siswa Aktif"], ["25+", "Guru & Staf"], ["A", "Akreditasi"]].map(([angka, label]) => (
+            {content.stats.map(([angka, label]) => (
               <div key={label} className="bg-white p-6 text-center">
                 <p className="font-display text-3xl font-extrabold text-primary-600">{angka}</p>
                 <p className="mt-1 text-sm font-semibold text-ink/50">{label}</p>
@@ -97,13 +95,13 @@ export default function Home() {
             <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary-50 text-primary-600"><Target size={24} /></span>
             <h3 className="mt-4 font-display text-2xl font-extrabold text-primary-900">Visi Kami</h3>
             <p className="mt-3 leading-relaxed text-ink/70">
-              Terwujudnya peserta didik yang beriman, bertakwa, cerdas, terampil, berbudi pekerti luhur, dan peduli terhadap lingkungan.
+              {content.vision}
             </p>
           </div>
           <div className="card p-8">
             <h3 className="font-display text-2xl font-extrabold text-primary-900">Misi Kami</h3>
             <ul className="mt-4 space-y-3">
-              {misi.map((m) => (
+              {content.mission.map((m) => (
                 <li key={m} className="flex gap-3 text-ink/70">
                   <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-leaf-500" /> {m}
                 </li>

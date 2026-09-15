@@ -1,91 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getNews, saveNews, getGallery, saveGallery } from '../../data/store';
+import { createGallery, createNews, deleteGallery, deleteNews, getContent, getGallery, getNews, getSession, logout, saveContent, updateGallery, updateNews } from '../../data/api';
+import { defaultAcademic, defaultHome, defaultProfile, mergeContent, normalizeAcademic, normalizeHome, normalizeProfile } from '../../data/content';
+
+const blankNews = { judul: '', isi: '', kategori: '', tanggal: '' }, blankGallery = { judul: '', url: '' };
+const parseLines = (v) => v.split('\n').map((x) => x.trim()).filter(Boolean);
+const pairs = (v) => parseLines(v).map((x) => x.split('|').map((y) => y.trim())).filter((x) => x.length > 1 && x[0] && x[1]).map((x) => [x[0], x.slice(1).join(' | ')]);
+const serial = (x) => x.join('\n'), serialPairs = (x) => x.map((v) => v.join(' | ')).join('\n');
+const homeForm = (x) => ({ ...x, stats: serialPairs(x.stats), mission: serial(x.mission) });
+const profileForm = (x) => ({ ...x, details: serialPairs(x.details) });
+const academicForm = (x) => ({ ...x, approaches: serial(x.approaches), schedule: serialPairs(x.schedule), extracurriculars: serialPairs(x.extracurriculars) });
+
+function Field({ label, value, set, area, hint, type = 'text' }) { const Tag = area ? 'textarea' : 'input'; return <label className="mt-4 block text-sm font-bold text-ink/70">{label}<Tag required type={area ? undefined : type} value={value || ''} onChange={(e) => set(e.target.value)} className={`mt-1 w-full rounded-xl border border-primary-200 px-4 py-2.5 font-normal ${area ? 'h-28' : ''}`} />{hint && <small className="mt-1 block font-normal text-ink/45">{hint}</small>}</label>; }
 
 export default function Dashboard() {
-  const nav = useNavigate();
-  const [tab, setTab] = useState('news');
-  const [news, setNews] = useState([]);
-  const [gallery, setGallery] = useState([]);
-  const [newNews, setNewNews] = useState({ judul: '', isi: '', kategori: '', tanggal: '' });
-
-  useEffect(() => {
-    if (!localStorage.getItem('isLoggedIn')) nav('/admin');
-    setNews(getNews());
-    setGallery(getGallery());
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    nav('/admin');
-  };
-
-  const addNews = () => {
-    if(!newNews.judul || !newNews.isi) return alert('Judul dan Isi harus diisi!');
-    const updated = [...news, { ...newNews, id: Date.now() }];
-    saveNews(updated);
-    setNews(updated);
-    setNewNews({ judul: '', isi: '', kategori: '', tanggal: '' });
-    alert('Berita berhasil ditambahkan!');
-  };
-
-  const deleteNews = (id) => {
-    if(confirm('Hapus berita ini?')) {
-      const updated = news.filter(n => n.id !== id);
-      saveNews(updated);
-      setNews(updated);
-    }
-  };
-
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="flex justify-between items-center mb-8 border-b pb-4">
-        <h1 className="text-2xl font-bold text-primary">Dashboard Admin</h1>
-        <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">Logout</button>
-      </div>
-
-      <div className="flex space-x-4 mb-6 border-b">
-        <button onClick={() => setTab('news')} className={`px-4 py-2 font-bold ${tab === 'news' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}>Kelola Berita</button>
-        <button onClick={() => setTab('gallery')} className={`px-4 py-2 font-bold ${tab === 'gallery' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}>Lihat Galeri</button>
-      </div>
-
-      {tab === 'news' && (
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="bg-white p-6 rounded-lg shadow border">
-            <h3 className="font-bold mb-3 text-lg">Tambah Berita Baru</h3>
-            <input className="border p-2 w-full mb-3 rounded" placeholder="Judul Berita" value={newNews.judul} onChange={e => setNewNews({...newNews, judul: e.target.value})} />
-            <textarea className="border p-2 w-full mb-3 rounded h-24" placeholder="Isi Berita" value={newNews.isi} onChange={e => setNewNews({...newNews, isi: e.target.value})}></textarea>
-            <div className="flex space-x-2 mb-4">
-              <input className="border p-2 w-1/2 rounded" placeholder="Kategori (Prestasi/Kegiatan)" value={newNews.kategori} onChange={e => setNewNews({...newNews, kategori: e.target.value})} />
-              <input className="border p-2 w-1/2 rounded" placeholder="Tanggal (cth: 12 Apr 2026)" value={newNews.tanggal} onChange={e => setNewNews({...newNews, tanggal: e.target.value})} />
-            </div>
-            <button onClick={addNews} className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 font-bold">Simpan Berita</button>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow border">
-            <h3 className="font-bold mb-3 text-lg">Daftar Berita Saat Ini</h3>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {news.map(n => (
-                <div key={n.id} className="flex justify-between border-b pb-2 items-center">
-                  <div>
-                    <p className="font-semibold text-gray-800">{n.judul}</p>
-                    <p className="text-xs text-gray-500">{n.tanggal} - {n.kategori}</p>
-                  </div>
-                  <button onClick={() => deleteNews(n.id)} className="text-red-500 text-sm hover:underline">Hapus</button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {tab === 'gallery' && (
-         <div className="bg-white p-6 rounded-lg shadow border">
-            <p className="text-gray-600 mb-4">Preview Galeri Sekolah. (Upload gambar dapat ditambahkan menggunakan Firebase Storage pada tahap selanjutnya).</p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {gallery.map(g => <img key={g.id} src={g.url} className="h-40 w-full object-cover rounded shadow" alt={g.judul} />)}
-            </div>
-         </div>
-      )}
-    </div>
-  );
+  const nav = useNavigate(); const [tab, setTab] = useState('news'); const [loading, setLoading] = useState(true), [saving, setSaving] = useState(false), [error, setError] = useState('');
+  const [news, setNews] = useState([]), [gallery, setGallery] = useState([]), [nform, setNform] = useState(blankNews), [gform, setGform] = useState(blankGallery), [editN, setEditN] = useState(null), [editG, setEditG] = useState(null);
+  const [home, setHome] = useState(homeForm(defaultHome)), [profile, setProfile] = useState(profileForm(defaultProfile)), [academic, setAcademic] = useState(academicForm(defaultAcademic));
+  const fail = (e) => { if (e.status === 401) { logout(); nav('/admin', { replace: true }); } else setError(e.message || 'Terjadi kesalahan.'); };
+  useEffect(() => { Promise.all([getSession(), getNews(), getGallery(), getContent('home'), getContent('profile'), getContent('academic')]).then(([, n, g, h, p, a]) => { setNews(n); setGallery(g); if (h) setHome(homeForm(mergeContent(defaultHome, normalizeHome(h)))); if (p) setProfile(profileForm(mergeContent(defaultProfile, normalizeProfile(p)))); if (a) setAcademic(academicForm(mergeContent(defaultAcademic, normalizeAcademic(a)))); }).catch(fail).finally(() => setLoading(false)); }, [nav]);
+  const change = (set, obj, key) => (v) => set({ ...obj, [key]: v });
+  const submitNews = async (e) => { e.preventDefault(); setSaving(true); try { if (editN) { await updateNews(editN, nform); setNews(news.map((x) => x.id === editN ? { ...x, ...nform } : x)); } else setNews([await createNews(nform), ...news]); setNform(blankNews); setEditN(null); } catch (x) { fail(x); } finally { setSaving(false); } };
+  const submitGallery = async (e) => { e.preventDefault(); setSaving(true); try { if (editG) { await updateGallery(editG, gform); setGallery(gallery.map((x) => x.id === editG ? { ...x, ...gform } : x)); } else setGallery([await createGallery(gform), ...gallery]); setGform(blankGallery); setEditG(null); } catch (x) { fail(x); } finally { setSaving(false); } };
+  const save = async (name, data) => { setSaving(true); try { await saveContent(name, data); } catch (e) { fail(e); } finally { setSaving(false); } };
+  const submitContent = (name, obj, parse) => (e) => { e.preventDefault(); save(name, parse(obj)); };
+  const submitButton = (text) => <button disabled={saving} className="btn btn-primary mt-6 w-full disabled:opacity-70">{saving ? 'Menyimpan…' : text}</button>;
+  const tabs = [['news', 'Berita'], ['gallery', 'Galeri'], ['home', 'Beranda'], ['profile', 'Profil'], ['academic', 'Akademik']];
+  return <div className="container-page max-w-6xl py-8 md:py-12"><div className="mb-8 flex items-center justify-between border-b border-primary-100 pb-4"><div><p className="eyebrow">Area terbatas</p><h1 className="mt-3 font-display text-3xl font-extrabold text-primary-900">Dashboard Admin</h1></div><button onClick={() => { logout(); nav('/admin'); }} className="btn btn-ghost !px-4 !py-2 text-sm">Keluar</button></div><div className="mb-6 flex flex-wrap gap-2 border-b border-primary-100">{tabs.map(([id, label]) => <button key={id} onClick={() => setTab(id)} className={`px-4 py-3 font-bold ${tab === id ? 'border-b-2 border-primary-500 text-primary-700' : 'text-ink/50'}`}>{label}</button>)}</div>{error && <p className="mb-6 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">{error}</p>}{loading ? <p>Memuat data…</p> : tab === 'news' ? <div className="grid gap-8 md:grid-cols-2"><form onSubmit={submitNews} className="card p-6"><h2 className="font-display text-xl font-bold">{editN ? 'Edit Berita' : 'Tambah Berita'}</h2><Field label="Judul" value={nform.judul} set={change(setNform, nform, 'judul')} /><Field label="Isi" area value={nform.isi} set={change(setNform, nform, 'isi')} /><Field label="Kategori" value={nform.kategori} set={change(setNform, nform, 'kategori')} /><Field label="Tanggal" type="date" value={nform.tanggal} set={change(setNform, nform, 'tanggal')} />{submitButton(editN ? 'Simpan Perubahan' : 'Simpan Berita')}{editN && <button type="button" onClick={() => { setEditN(null); setNform(blankNews); }} className="mt-3 w-full text-sm font-bold">Batal</button>}</form><List title="Daftar Berita" items={news} edit={(x) => { setEditN(x.id); setNform(x); }} remove={async (x) => { if (window.confirm('Hapus berita ini?')) { try { await deleteNews(x.id); setNews(news.filter((v) => v.id !== x.id)); } catch (e) { fail(e); } } }} /></div> : tab === 'gallery' ? <div className="grid gap-8 md:grid-cols-2"><form onSubmit={submitGallery} className="card p-6"><h2 className="font-display text-xl font-bold">{editG ? 'Edit Foto Galeri' : 'Tambah Foto Galeri'}</h2><Field label="Judul foto" value={gform.judul} set={change(setGform, gform, 'judul')} /><Field label="URL gambar" type="url" value={gform.url} set={change(setGform, gform, 'url')} />{submitButton(editG ? 'Simpan Perubahan' : 'Simpan Foto')}{editG && <button type="button" onClick={() => { setEditG(null); setGform(blankGallery); }} className="mt-3 w-full text-sm font-bold">Batal</button>}</form><List title="Galeri Sekolah" items={gallery} edit={(x) => { setEditG(x.id); setGform(x); }} remove={async (x) => { if (window.confirm('Hapus foto ini?')) { try { await deleteGallery(x.id); setGallery(gallery.filter((v) => v.id !== x.id)); } catch (e) { fail(e); } } }} /></div> : tab === 'home' ? <ContentForm title="Konten Beranda" submit={submitContent('home', home, (x) => ({ ...x, stats: pairs(x.stats).map(([value, label]) => ({ value, label })), mission: parseLines(x.mission) }))}>{[['Judul hero', 'heroTitle'], ['Deskripsi hero', 'heroText', true], ['URL gambar hero', 'heroImage'], ['Label akreditasi', 'accreditation'], ['Keterangan akreditasi', 'accreditationText'], ['Statistik', 'stats', true, 'Satu baris: angka | label'], ['Visi', 'vision', true], ['Misi', 'mission', true, 'Satu misi per baris']].map(([l, k, a, h]) => <Field key={k} label={l} area={a} hint={h} value={home[k]} set={change(setHome, home, k)} />)}{submitButton('Simpan Konten Beranda')}</ContentForm> : tab === 'profile' ? <ContentForm title="Konten Profil Sekolah" submit={submitContent('profile', profile, (x) => ({ ...x, details: pairs(x.details).map(([label, value]) => ({ label, value })) }))}>{[['Judul', 'title'], ['Subjudul', 'sub'], ['Sejarah paragraf 1', 'history1', true], ['Sejarah paragraf 2', 'history2', true], ['Sambutan kepala sekolah', 'principalQuote', true], ['Nama/jabatan kepala sekolah', 'principalName'], ['Informasi sekolah', 'details', true, 'Satu baris: label | isi']].map(([l, k, a, h]) => <Field key={k} label={l} area={a} hint={h} value={profile[k]} set={change(setProfile, profile, k)} />)}{submitButton('Simpan Konten Profil')}</ContentForm> : <ContentForm title="Konten Akademik" submit={submitContent('academic', academic, (x) => ({ ...x, approaches: parseLines(x.approaches), schedule: pairs(x.schedule).map(([day, value]) => ({ day, value })), extracurriculars: pairs(x.extracurriculars).map(([title, description]) => ({ title, description })) }))}><Field label="Deskripsi kurikulum" area value={academic.description} set={change(setAcademic, academic, 'description')} /><Field label="Poin pendekatan belajar" area hint="Satu poin per baris" value={academic.approaches} set={change(setAcademic, academic, 'approaches')} /><Field label="Jadwal belajar" area hint="Satu baris: hari | jam/keterangan" value={academic.schedule} set={change(setAcademic, academic, 'schedule')} /><Field label="Ekstrakurikuler" area hint="Satu baris: nama | deskripsi" value={academic.extracurriculars} set={change(setAcademic, academic, 'extracurriculars')} />{submitButton('Simpan Konten Akademik')}</ContentForm>}</div>;
 }
+function ContentForm({ title, submit, children }) { return <form onSubmit={submit} className="card mx-auto max-w-3xl p-6 md:p-8"><h2 className="font-display text-xl font-bold text-primary-900">{title}</h2>{children}</form>; }
+function List({ title, items, edit, remove }) { return <section className="card p-6"><h2 className="font-display text-xl font-bold text-primary-900">{title}</h2><div className="mt-4 space-y-3">{items.length ? items.map((x) => <div key={x.id} className="flex items-center justify-between gap-3 border-b border-primary-100 pb-3"><div><p className="font-bold text-primary-900">{x.judul}</p>{x.tanggal && <p className="text-xs text-ink/50">{x.tanggal} · {x.kategori}</p>}</div><div className="flex gap-3 text-sm font-bold"><button type="button" onClick={() => edit(x)} className="text-primary-600">Edit</button><button type="button" onClick={() => remove(x)} className="text-red-600">Hapus</button></div></div>) : <p className="text-sm text-ink/50">Belum ada data.</p>}</div></section>; }

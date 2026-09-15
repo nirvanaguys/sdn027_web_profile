@@ -15,7 +15,7 @@ Website ini dikembangkan sebagai solusi digitalisasi untuk SDN 027 Balikpapan Ut
 - Memberikan informasi lengkap tentang sekolah (visi, misi, profil, akademik).
 - Menyediakan portal berita dan pengumuman terkini.
 - Menampilkan galeri kegiatan sekolah.
-- Memiliki sistem admin sederhana untuk pengelolaan konten.
+- Memiliki sistem admin terlindungi untuk pengelolaan konten.
 
 ### 🎯 Tujuan
 - Menyediakan media informasi resmi bagi SDN 027 Balikpapan Utara.
@@ -29,7 +29,7 @@ Website ini dikembangkan sebagai solusi digitalisasi untuk SDN 027 Balikpapan Ut
 - **Program Akademik** — Kurikulum, jam belajar, ekstrakurikuler.
 - **Berita & Pengumuman** — Informasi terkini dari sekolah.
 - **Galeri Foto** — Dokumentasi kegiatan dan fasilitas sekolah.
-- **Dashboard Admin** — Sistem login untuk menambah/menghapus berita.
+- **Dashboard Admin** — Login Firebase Authentication untuk menambah/menghapus berita dan galeri berbasis URL.
 
 ---
 
@@ -58,7 +58,8 @@ Website ini dikembangkan sebagai solusi digitalisasi untuk SDN 027 Balikpapan Ut
 | Styling | **Tailwind CSS 3.4** |
 | Routing | React Router DOM 7 |
 | Icons | Lucide React |
-| Database | localStorage (simulasi database lokal) |
+| Autentikasi | Firebase Authentication (Email/Password) |
+| Database | Cloud Firestore |
 | Package Manager | npm |
 | Build Tool | Vite |
 
@@ -167,7 +168,24 @@ export default {
 
 > ⚠️ **PENTING:** Jika ada perubahan pada file konfigurasi di atas, **wajib** restart server development.
 
-### 4. Jalankan Website
+### 4. Konfigurasi Firebase
+
+1. Buat project di [Firebase Console](https://console.firebase.google.com/), lalu daftarkan **Web app**.
+2. Aktifkan **Authentication → Sign-in method → Email/Password**, kemudian buat pengguna admin dengan email yang akan digunakan untuk masuk.
+3. Buat database **Cloud Firestore**.
+4. Salin `.env.example` menjadi `.env`, lalu tempel setiap nilai dari objek konfigurasi Web App Firebase. Isi `VITE_ADMIN_EMAIL` dengan email pengguna admin tadi.
+
+```bash
+cp .env.example .env
+```
+
+Di Windows, gunakan `copy .env.example .env`.
+
+5. Di Firebase Console, buka **Firestore Database → Rules**. Salin isi [firestore.rules](./firestore.rules), ganti `GANTI_DENGAN_EMAIL_ADMIN` dengan email admin yang sama persis, lalu publikasikan rules tersebut.
+
+Konfigurasi Web Firebase memang digunakan di aplikasi browser; keamanan penulisan data ditentukan oleh Firestore Security Rules, bukan dengan menyembunyikan `apiKey`. Lihat panduan resmi [setup Firebase Web](https://firebase.google.com/docs/web/setup) dan [Firebase Authentication Email/Password](https://firebase.google.com/docs/auth/web/password-auth).
+
+### 5. Jalankan Website
 
 ```bash
 npm run dev
@@ -182,15 +200,13 @@ Setelah muncul pesan seperti ini:
 
 Buka browser dan kunjungi **http://localhost:5173/** — website profil SDN 027 sudah berjalan! 🎉
 
-### 5. Akses Dashboard Admin
+### 6. Akses Dashboard Admin
 
 1. Klik tombol **"Admin"** di pojok kanan atas navbar.
-2. Login dengan kredensial bawaan:
-   - **Username:** `admin`
-   - **Password:** `sdn027`
-3. Setelah login, kamu bisa menambah/menghapus berita dan melihat galeri.
+2. Login dengan email dan password pengguna Firebase Authentication yang Anda buat.
+3. Setelah login, Anda bisa menambah/menghapus berita serta menambah/menghapus entri galeri dengan URL gambar.
 
-> 💡 Data berita dan galeri disimpan di `localStorage` browser. Jika kamu membuka website di browser lain atau menghapus cache, data akan kembali ke default.
+> Data berita dan galeri dikelola melalui koleksi Firestore `news` dan `gallery`. Untuk membuat data awal, tambahkan berita atau galeri pertama melalui dashboard admin.
 
 ---
 
@@ -241,11 +257,14 @@ sdn027_web_profile/
 │   │       ├── Login.jsx    # Halaman login admin
 │   │       └── Dashboard.jsx # Dashboard admin
 │   ├── data/
-│   │   └── store.js     # Simulasi database (localStorage)
+│   │   ├── firebase.js  # Inisialisasi Firebase
+│   │   ├── AuthContext.jsx # Status sesi admin
+│   │   └── api.js       # Operasi Firebase Auth dan Firestore
 │   ├── App.jsx          # Router utama aplikasi
 │   ├── main.jsx         # Entry point React
 │   └── index.css        # Entry point CSS (Tailwind)
 ├── index.html           # Template HTML utama
+├── firestore.rules      # Aturan akses Cloud Firestore
 ├── package.json         # Daftar dependency & script
 ├── tailwind.config.js   # Konfigurasi Tailwind
 ├── postcss.config.js    # Konfigurasi PostCSS

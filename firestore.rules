@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'sdn027balikpapanutara1@gmail.com';
+    }
+
+    match /news/{document} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /gallery/{document} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /content/{document} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}

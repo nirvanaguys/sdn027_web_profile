@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { GraduationCap, Menu, X, Lock } from "lucide-react";
+import { logout } from "../data/api";
+import { useAuth } from "../data/useAuth";
 
 const links = [
   { to: "/", label: "Beranda" },
@@ -12,6 +14,9 @@ const links = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const nav = useNavigate();
+  const { isAdmin } = useAuth();
+  const handleLogout = async () => { await logout(); setOpen(false); nav('/'); };
   return (
     <header className="sticky top-0 z-50 border-b border-primary-100 bg-white/95 shadow-sm backdrop-blur">
       <div className="container-page flex h-16 items-center justify-between">
@@ -38,9 +43,7 @@ export default function Navbar() {
               {l.label}
             </NavLink>
           ))}
-          <Link to="/admin" className="btn btn-honey ml-3 !px-4 !py-2 text-sm">
-            <Lock size={15} /> Admin
-          </Link>
+          {isAdmin ? <Link to="/admin/dashboard" className="btn btn-honey ml-3 !px-4 !py-2 text-sm">Dashboard</Link> : <Link to="/admin" className="btn btn-honey ml-3 !px-4 !py-2 text-sm"><Lock size={15} /> Admin</Link>}
         </nav>
 
         <button className="rounded-xl border border-primary-100 bg-white p-2 text-primary-700 md:hidden" onClick={() => setOpen(!open)} aria-label="Buka menu">
@@ -60,9 +63,7 @@ export default function Navbar() {
               {l.label}
             </NavLink>
           ))}
-          <Link to="/admin" onClick={() => setOpen(false)} className="block rounded-xl bg-honey-500 px-4 py-2.5 font-bold text-primary-900">
-            Admin
-          </Link>
+          {isAdmin ? <><Link to="/admin/dashboard" onClick={() => setOpen(false)} className="block rounded-xl bg-honey-500 px-4 py-2.5 font-bold text-primary-900">Dashboard</Link><button onClick={handleLogout} className="block w-full rounded-xl px-4 py-2.5 text-left font-bold text-primary-700">Keluar</button></> : <Link to="/admin" onClick={() => setOpen(false)} className="block rounded-xl bg-honey-500 px-4 py-2.5 font-bold text-primary-900">Admin</Link>}
         </nav>
       )}
     </header>

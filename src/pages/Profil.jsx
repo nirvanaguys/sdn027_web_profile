@@ -1,5 +1,8 @@
-import { Quote, BadgeCheck, Building2, BookMarked, CalendarClock, MapPin } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Quote, BadgeCheck, BookMarked, CalendarClock, MapPin } from "lucide-react";
 import SectionHead from "../components/SectionHead";
+import { getContent } from "../data/api";
+import { defaultProfile, mergeContent, normalizeProfile } from "../data/content";
 
 const dataSekolah = [
   { icon: BadgeCheck, label: "Status", nilai: "Sekolah Negeri · Akreditasi A" },
@@ -9,23 +12,25 @@ const dataSekolah = [
 ];
 
 export default function Profil() {
+  const [content, setContent] = useState(defaultProfile);
+  useEffect(() => { getContent('profile').then((data) => data && setContent(mergeContent(defaultProfile, normalizeProfile(data)))).catch(() => {}); }, []);
+  const dataSekolah = content.details.map(([label, nilai], index) => ({ icon: [BadgeCheck, BookMarked, CalendarClock, MapPin][index] || BadgeCheck, label, nilai }));
   return (
     <div className="container-page py-14 md:py-20">
       <SectionHead
         eyebrow="Profil Sekolah"
-        title="Mengenal SDN 027 Balikpapan Utara"
-        sub="Lebih dari tiga dekade mendampingi anak-anak Balikpapan Utara tumbuh cerdas dan berkarakter."
+        title={content.title}
+        sub={content.sub}
       />
 
       <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="card p-8">
           <h2 className="font-display text-2xl font-extrabold text-primary-900">Sekilas Tentang Kami</h2>
-          {/* Ganti paragraf ini dengan sejarah asli sekolah versi guru/kepsek */}
           <p className="mt-4 leading-relaxed text-ink/70">
-            SDN 027 Balikpapan Utara berdiri pada awal 1990-an dan sejak itu menjadi rumah belajar bagi ratusan anak di sekitar kecamatan Balikpapan Utara. Dari ruang-ruang kelas yang sederhana, sekolah ini tumbuh menjadi sekolah dasar negeri berakreditasi A yang dikenal hangat dan ramah anak.
+            {content.history1}
           </p>
           <p className="mt-3 leading-relaxed text-ink/70">
-            Hari ini, dengan dukungan 25+ guru dan staf serta kepercayaan 450+ keluarga siswa, kami terus berbenah: memperkaya kegiatan belajar, memperkuat pendidikan karakter, dan membuka diri terhadap masyarakat melalui website ini.
+            {content.history2}
           </p>
         </div>
 
@@ -33,10 +38,9 @@ export default function Profil() {
           <Quote size={40} className="absolute -right-3 -top-3 text-white/10" />
           <h2 className="font-display text-xl font-extrabold">Sambutan Kepala Sekolah</h2>
           <p className="mt-4 text-sm leading-relaxed text-primary-100">
-            "Setiap anak yang masuk gerbang sekolah kami adalah amanah. Tugas kami bukan hanya mengajar, tetapi menemani mereka tumbuh menjadi pribadi yang baik."
+            "{content.principalQuote}"
           </p>
-          {/* Ganti dengan nama kepala sekolah yang sebenarnya */}
-          <p className="mt-6 font-display font-bold text-honey-300">— Kepala Sekolah SDN 027</p>
+          <p className="mt-6 font-display font-bold text-honey-300">— {content.principalName}</p>
         </div>
       </div>
 
