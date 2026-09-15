@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { @apply bg-cream font-body text-ink antialiased; }
+  h1, h2, h3, h4 { @apply font-display; }
+}
+
+@layer components {
+  .container-page { @apply mx-auto w-full max-w-6xl px-4 sm:px-6; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-bold transition duration-200; }
+  .btn-primary { @apply bg-primary-500 text-white shadow-lg shadow-primary-500/25 hover:bg-primary-600 hover:-translate-y-0.5; }
+  .btn-honey { @apply bg-honey-500 text-primary-900 shadow-lg shadow-honey-500/30 hover:bg-honey-600 hover:-translate-y-0.5; }
+  .btn-ghost { @apply border-2 border-primary-200 bg-white/80 text-primary-700 hover:border-primary-400 hover:bg-white; }
+  .card { @apply rounded-3xl border border-primary-100 bg-white shadow-sm; }
+  .eyebrow { @apply inline-flex items-center gap-2 rounded-full bg-primary-50 px-4 py-1.5 text-xs font-extrabold uppercase tracking-widest text-primary-600; }
+  /* efek stabilo marker di kata penting — sentuhan manual, bukan gradasi AI */
+  .highlight { background-image: linear-gradient(transparent 60%, theme('colors.honey.200') 60%); }
+}
