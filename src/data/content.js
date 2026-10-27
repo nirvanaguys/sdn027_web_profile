@@ -24,9 +24,74 @@ export const defaultAcademic = {
   extracurriculars: [['Pramuka', 'Membentuk karakter, kemandirian, dan jiwa kepemimpinan.'], ['Olahraga', 'Sepak bola, bulu tangkis, dan senam pagi setiap pekan.'], ['Seni & Tari', 'Tari tradisional, musik, dan prakarya untuk melatih kreativitas.'], ['Klub Sains', 'Persiapan olimpiade sains dan matematika tingkat kota.']],
 };
 
+export const defaultNews = [
+  {
+    id: 'news-1',
+    kategori: 'Prestasi',
+    tanggal: '2026-03-15',
+    judul: 'Juara 1 Lomba Cerdas Cermat & Sains Tingkat Kota Balikpapan',
+    isi: 'Siswa-siswi SDN 027 Balikpapan Utara berhasil mengukir prestasi gemilang dengan meraih Juara 1 dalam ajang Olimpiade Sains dan Cerdas Cermat tingkat Sekolah Dasar se-Kota Balikpapan.',
+  },
+  {
+    id: 'news-2',
+    kategori: 'Kegiatan',
+    tanggal: '2026-03-01',
+    judul: 'Aksi Bersih Lingkungan dan Gerakan Sekolah Adiwiyata',
+    isi: 'Seluruh siswa, dewan guru, dan orang tua bahu-membahu dalam kegiatan kerja bakti lingkungan, pemilahan sampah, dan penanaman pohon penghijauan di area sekolah.',
+  },
+  {
+    id: 'news-3',
+    kategori: 'Pengumuman',
+    tanggal: '2026-02-20',
+    judul: 'Jadwal Pelaksanaan Penilaian Tengah Semester (PTS) Genap',
+    isi: 'Diberitahukan kepada seluruh orang tua/wali murid bahwa Penilaian Tengah Semester Genap Tahun Ajaran 2025/2026 akan dimulai pekan depan. Persiapkan putra-putri dengan baik.',
+  },
+  {
+    id: 'news-4',
+    kategori: 'Kegiatan',
+    tanggal: '2026-02-10',
+    judul: 'Gelar Karya P5 & Pentas Seni Budaya Nusantara',
+    isi: 'Pameran kreativitas Projek Penguatan Profil Pelajar Pancasila (P5) menampilkan beragam tarian daerah Kalimantan Timur, bazar produk daur ulang, dan kreasi seni siswa.',
+  },
+];
+
+export const defaultGallery = [
+  {
+    id: 'gal-1',
+    judul: 'Upacara Bendera Hari Senin Bersama Guru & Siswa',
+    url: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    id: 'gal-2',
+    judul: 'Kegiatan Pramuka & Latihan Baris-Berbaris',
+    url: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    id: 'gal-3',
+    judul: 'Pembelajaran Interaktif dan Diskusi Kelompok di Kelas',
+    url: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    id: 'gal-4',
+    judul: 'Latihan Tari Tradisional Daerah di Sanggar Sekolah',
+    url: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    id: 'gal-5',
+    judul: 'Senam Pagi dan Olahraga Bersama di Lapangan Sekolah',
+    url: 'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    id: 'gal-6',
+    judul: 'Pojok Baca dan Aktivitas Literasi di Perpustakaan',
+    url: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80',
+  },
+];
+
 export const mergeContent = (defaults, data) => ({ ...defaults, ...data });
 
 const toPairs = (items, first, second) => (items || []).map((item) => Array.isArray(item) ? item : [item[first] || '', item[second] || '']);
 export const normalizeHome = (data) => ({ ...data, stats: toPairs(data.stats, 'value', 'label') });
 export const normalizeProfile = (data) => ({ ...data, details: toPairs(data.details, 'label', 'value') });
 export const normalizeAcademic = (data) => ({ ...data, schedule: toPairs(data.schedule, 'day', 'value'), extracurriculars: toPairs(data.extracurriculars, 'title', 'description') });
+
