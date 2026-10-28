@@ -1,34 +1,60 @@
-import { deleteObject, getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
-import { getFirebaseServices } from './firebase';
+
 import { validateGalleryFile } from './galleryUpload';
-import { waitForPhotoUpload } from './photoUploadTask';
+
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
 export async function uploadGalleryPhoto(file) {
   validateGalleryFile(file);
-  const { auth } = getFirebaseServices();
-  if (!auth.app.options.storageBucket) {
-    throw new Error('Firebase Storage belum dikonfigurasi. Atur VITE_FIREBASE_STORAGE_BUCKET terlebih dahulu.');
+
+  if (!CLOUD_NAME || !UPLOAD_PRESET) {
+    throw new Error(
+      'Cloudinary belum dikonfigurasi. Periksa Cloud name dan Upload Preset di file .env.'
+    );
   }
-  const extension = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[file.type];
-  const storage = getStorage(auth.app);
-  storage.maxUploadRetryTime = 30000;
-  storage.maxOperationRetryTime = 15000;
-  const reference = ref(storage, `gallery/${crypto.randomUUID()}.${extension}`);
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', UPLOAD_PRESET);
+
+  let response;
+
   try {
-    await waitForPhotoUpload(uploadBytesResumable(reference, file, { contentType: file.type }));
+    response = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+      {
+        method: 'POST',
+        body: formData,
+      }
+    );
   } catch (error) {
-    throw new Error(`Upload foto gagal: ${error.message} Periksa aktivasi/nama bucket Firebase Storage dan aturan akses admin.`, { cause: error });
+    throw new Error(
+      'Tidak dapat terhubung ke Cloudinary. Periksa koneksi internet.',
+      { cause: error }
+    );
   }
-  try {
-    return { url: await getDownloadURL(reference), path: reference.fullPath };
-  } catch (error) {
-    try { await deleteObject(reference); } catch (cleanupError) {
-      console.warn('Gagal membersihkan upload tanpa URL:', cleanupError);
-    }
-    throw new Error('Gagal mendapatkan URL foto. Silakan coba lagi.', { cause: error });
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(
+      `Upload foto gagal: ${
+        result?.error?.message || 'Periksa konfigurasi Cloudinary.'
+      }`
+    );
   }
+
+  if (!result.secure_url) {
+    throw new Error('Cloudinary tidak memberikan URL foto.');
+  }
+
+  return {
+    url: result.secure_url,
+    path: result.public_id || '',
+  };
 }
 
-export function removeGalleryUpload(path) {
-  return deleteObject(ref(getStorage(getFirebaseServices().auth.app), path));
+export async function removeGalleryUpload() {
+  // Penghapusan aset Cloudinary memerlukan proses server yang aman.
+  // Jangan menaruh API Secret di frontend.
 }

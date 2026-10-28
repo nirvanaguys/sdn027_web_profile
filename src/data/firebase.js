@@ -1,6 +1,6 @@
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -13,14 +13,28 @@ const firebaseConfig = {
 
 const requiredKeys = ['apiKey', 'authDomain', 'projectId', 'appId'];
 
-export const isFirebaseConfigured = () => requiredKeys.every((key) => firebaseConfig[key]);
-export const adminEmail = () => import.meta.env.VITE_ADMIN_EMAIL?.trim().toLowerCase() || '';
-export const isAdmin = (user) => Boolean(user?.email && user.email.toLowerCase() === adminEmail());
+export const isFirebaseConfigured = () =>
+  requiredKeys.every((key) => firebaseConfig[key]);
+
+export const adminEmail = () =>
+  import.meta.env.VITE_ADMIN_EMAIL?.trim().toLowerCase() || '';
+
+export const isAdmin = (user) =>
+  Boolean(user?.email && user.email.toLowerCase() === adminEmail());
 
 export const getFirebaseServices = () => {
   if (!isFirebaseConfigured()) {
-    throw new Error('Firebase belum dikonfigurasi. Isi semua VITE_FIREBASE_* pada file .env.');
+    throw new Error(
+      'Firebase belum dikonfigurasi. Isi semua VITE_FIREBASE_* pada file .env.'
+    );
   }
+
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-  return { auth: getAuth(app), db: getFirestore(app) };
+
+  const auth = getAuth(app);
+  const db = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true,
+  });
+
+  return { auth, db };
 };

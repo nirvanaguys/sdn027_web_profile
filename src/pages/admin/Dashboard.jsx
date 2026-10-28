@@ -64,4 +64,129 @@ export default function Dashboard() {
   return <div className="container-page max-w-6xl py-8 md:py-12"><div className="mb-8 flex items-center justify-between border-b border-primary-100 pb-4"><div><p className="eyebrow">Area terbatas</p><h1 className="mt-3 font-display text-3xl font-extrabold text-primary-900">Dashboard Admin</h1></div><button onClick={() => { logout(); nav('/admin'); }} className="btn btn-ghost !px-4 !py-2 text-sm">Keluar</button></div><div className="mb-6 flex flex-wrap gap-2 border-b border-primary-100">{tabs.map(([id, label]) => <button key={id} disabled={saving} onClick={() => setTab(id)} className={`px-4 py-3 font-bold ${tab === id ? 'border-b-2 border-primary-500 text-primary-700' : 'text-ink/50'}`}>{label}</button>)}</div>{loading ? <p>Memuat data…</p> : tab === 'news' ? <div className="grid gap-8 md:grid-cols-2"><form onSubmit={submitNews} className="card p-6"><h2 className="font-display text-xl font-bold">{editN ? 'Edit Berita' : 'Tambah Berita'}</h2><Field label="Judul" value={nform.judul} set={change(setNform, nform, 'judul')} /><Field label="Isi" area value={nform.isi} set={change(setNform, nform, 'isi')} /><Field label="Kategori" value={nform.kategori} set={change(setNform, nform, 'kategori')} /><Field label="Tanggal" type="date" value={nform.tanggal} set={change(setNform, nform, 'tanggal')} />{submitButton(editN ? 'Simpan Perubahan' : 'Simpan Berita')}{editN && <button type="button" onClick={() => { setEditN(null); setNform(blankNews); }} className="mt-3 w-full text-sm font-bold">Batal</button>}</form><List title="Daftar Berita" items={news} edit={(x) => { setEditN(x.id); setNform(x); }} remove={async (x) => { if (window.confirm('Hapus berita ini?')) { try { await deleteNews(x.id); setNews(news.filter((v) => v.id !== x.id)); } catch (e) { fail(e); } } }} /></div> : tab === 'gallery' ? <div className="grid gap-8 md:grid-cols-2"><form onSubmit={submitGallery} className="card p-6"><h2 className="font-display text-xl font-bold">{editG ? 'Edit Foto Galeri' : 'Tambah Foto Galeri'}</h2><Field label="Judul foto" value={gform.judul} set={change(setGform, gform, 'judul')} /><GalleryPhotoField key={galleryInputKey} file={galleryFile} url={gform.url} onChange={setGalleryFile} disabled={saving} />{submitButton(editG ? 'Simpan Perubahan' : 'Simpan Foto')}{editG && <button type="button" disabled={saving} onClick={() => { setEditG(null); setGform(blankGallery); resetGalleryFile(); }} className="mt-3 w-full text-sm font-bold">Batal</button>}</form><List title="Galeri Sekolah" items={gallery} edit={(x) => { if (saving) return; setEditG(x.id); setGform(x); resetGalleryFile(); }} remove={async (x) => { if (!saving && window.confirm('Hapus foto ini?')) { try { await deleteGallery(x.id); setGallery(gallery.filter((v) => v.id !== x.id)); } catch (e) { fail(e); } } }} /></div> : tab === 'home' ? <ContentForm title="Konten Beranda" submit={submitHome}>{[['Judul hero', 'heroTitle'], ['Deskripsi hero', 'heroText', true], ['Label akreditasi', 'accreditation'], ['Keterangan akreditasi', 'accreditationText'], ['Statistik', 'stats', true, 'Satu baris: angka | label'], ['Visi', 'vision', true], ['Misi', 'mission', true, 'Satu misi per baris']].map(([l, k, a, h]) => <Field key={k} label={l} area={a} hint={h} value={home[k]} set={change(setHome, home, k)} />)}<GalleryPhotoField file={homeFile} url={home.heroImage} onChange={setHomeFile} disabled={saving} />{submitButton('Simpan Konten Beranda')}</ContentForm> : tab === 'profile' ? <ContentForm title="Konten Profil Sekolah" submit={submitContent('profile', profile, (x) => ({ ...x, details: pairs(x.details).map(([label, value]) => ({ label, value })) }))}>{[['Judul', 'title'], ['Subjudul', 'sub'], ['Sejarah paragraf 1', 'history1', true], ['Sejarah paragraf 2', 'history2', true], ['Sambutan kepala sekolah', 'principalQuote', true], ['Nama/jabatan kepala sekolah', 'principalName'], ['Informasi sekolah', 'details', true, 'Satu baris: label | isi']].map(([l, k, a, h]) => <Field key={k} label={l} area={a} hint={h} value={profile[k]} set={change(setProfile, profile, k)} />)}{submitButton('Simpan Konten Profil')}</ContentForm> : <ContentForm title="Konten Akademik" submit={submitContent('academic', academic, (x) => ({ ...x, approaches: parseLines(x.approaches), schedule: pairs(x.schedule).map(([day, value]) => ({ day, value })), extracurriculars: pairs(x.extracurriculars).map(([title, description]) => ({ title, description })) }))}><Field label="Deskripsi kurikulum" area value={academic.description} set={change(setAcademic, academic, 'description')} /><Field label="Poin pendekatan belajar" area hint="Satu poin per baris" value={academic.approaches} set={change(setAcademic, academic, 'approaches')} /><Field label="Jadwal belajar" area hint="Satu baris: hari | jam/keterangan" value={academic.schedule} set={change(setAcademic, academic, 'schedule')} /><Field label="Ekstrakurikuler" area hint="Satu baris: nama | deskripsi" value={academic.extracurriculars} set={change(setAcademic, academic, 'extracurriculars')} />{submitButton('Simpan Konten Akademik')}</ContentForm>}</div>;
 }
 function ContentForm({ title, submit, children }) { return <form onSubmit={submit} className="card mx-auto max-w-3xl p-6 md:p-8"><h2 className="font-display text-xl font-bold text-primary-900">{title}</h2>{children}</form>; }
-function List({ title, items, edit, remove }) { return <section className="card p-6"><h2 className="font-display text-xl font-bold text-primary-900">{title}</h2><div className="mt-4 space-y-3">{items.length ? items.map((x) => <div key={x.id} className="flex items-center justify-between gap-3 border-b border-primary-100 pb-3"><div><p className="font-bold text-primary-900">{x.judul}</p>{x.tanggal && <p className="text-xs text-ink/50">{x.tanggal} · {x.kategori}</p>}</div><div className="flex gap-3 text-sm font-bold"><button type="button" onClick={() => edit(x)} className="text-primary-600">Edit</button><button type="button" onClick={() => remove(x)} className="text-red-600">Hapus</button></div></div>) : <p className="text-sm text-ink/50">Belum ada data.</p>}</div></section>; }
+function List({ title, items, edit, remove }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
+
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentItems = items.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
+
+  useEffect(() => {
+    if (currentPage > Math.max(1, totalPages)) {
+      setCurrentPage(Math.max(1, totalPages));
+    }
+  }, [currentPage, totalPages]);
+
+  return (
+    <section className="card p-6">
+      <h2 className="font-display text-xl font-bold text-primary-900">
+        {title}
+      </h2>
+
+      <div className="mt-4 space-y-3">
+        {currentItems.length > 0 ? (
+          currentItems.map((x) => (
+            <div
+              key={x.id}
+              className="flex items-center justify-between gap-3 border-b border-primary-100 pb-3"
+            >
+              <div className="min-w-0">
+                <p className="break-words font-bold text-primary-900">
+                  {x.judul}
+                </p>
+
+                {x.tanggal && (
+                  <p className="text-xs text-ink/50">
+                    {x.tanggal} · {x.kategori}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex shrink-0 gap-3 text-sm font-bold">
+                <button
+                  type="button"
+                  onClick={() => edit(x)}
+                  className="text-primary-600"
+                >
+                  Edit
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => remove(x)}
+                  className="text-red-600"
+                >
+                  Hapus
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-ink/50">
+            Belum ada data.
+          </p>
+        )}
+      </div>
+
+      {totalPages > 1 && (
+        <nav
+          aria-label={`Navigasi halaman ${title}`}
+          className="mt-6 flex flex-wrap items-center justify-center gap-2"
+        >
+          <button
+            type="button"
+            onClick={() =>
+              setCurrentPage((page) => Math.max(1, page - 1))
+            }
+            disabled={currentPage === 1}
+            className="rounded-full border border-primary-100 px-3 py-2 text-sm font-bold text-primary-700 transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Sebelumnya
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+            (page) => (
+              <button
+                key={page}
+                type="button"
+                onClick={() => setCurrentPage(page)}
+                aria-label={`Halaman ${page}`}
+                aria-current={currentPage === page ? "page" : undefined}
+                className={`h-9 min-w-9 rounded-full px-3 text-sm font-bold transition ${
+                  currentPage === page
+                    ? "bg-primary-600 text-white"
+                    : "border border-primary-100 text-primary-700 hover:bg-primary-50"
+                }`}
+              >
+                {page}
+              </button>
+            )
+          )}
+
+          <button
+            type="button"
+            onClick={() =>
+              setCurrentPage((page) =>
+                Math.min(totalPages, page + 1)
+              )
+            }
+            disabled={currentPage === totalPages}
+            className="rounded-full border border-primary-100 px-3 py-2 text-sm font-bold text-primary-700 transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Berikutnya
+          </button>
+        </nav>
+      )}
+
+      {items.length > 0 && (
+        <p className="mt-3 text-center text-xs text-ink/50">
+          Menampilkan {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, items.length)} dari {items.length} item
+        </p>
+      )}
+    </section>
+  );
+}
