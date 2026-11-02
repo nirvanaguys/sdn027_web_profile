@@ -4,12 +4,6 @@ import SectionHead from "../components/SectionHead";
 import { getContent } from "../data/api";
 import { defaultProfile, mergeContent, normalizeProfile } from "../data/content";
 
-const dataSekolah = [
-  { icon: BadgeCheck, label: "Status", nilai: "Sekolah Negeri · Akreditasi A" },
-  { icon: BookMarked, label: "Kurikulum", nilai: "Kurikulum Merdeka" },
-  { icon: CalendarClock, label: "Jam Belajar", nilai: "Senin–Sabtu, 07.00–13.00 WITA" },
-  { icon: MapPin, label: "Lokasi", nilai: "Balikpapan Utara, Kalimantan Timur" },
-];
 
 export default function Profil() {
   const [content, setContent] = useState(defaultProfile);
@@ -37,6 +31,13 @@ export default function Profil() {
         <div className="card relative overflow-hidden bg-primary-600 p-8 text-white">
           <Quote size={40} className="absolute -right-3 -top-3 text-white/10" />
           <h2 className="font-display text-xl font-extrabold">Sambutan Kepala Sekolah</h2>
+          {content.principalPhoto && (
+            <img
+              src={content.principalPhoto}
+              alt={`Foto ${content.principalName || 'Kepala Sekolah'}`}
+              className="mt-4 h-40 w-40 rounded-2xl border border-white/20 object-cover"
+            />
+          )}
           <p className="mt-4 text-sm leading-relaxed text-primary-100">
             "{content.principalQuote}"
           </p>

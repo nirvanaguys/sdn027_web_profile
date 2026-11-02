@@ -19,8 +19,14 @@ export const isFirebaseConfigured = () =>
 export const adminEmail = () =>
   import.meta.env.VITE_ADMIN_EMAIL?.trim().toLowerCase() || '';
 
-export const isAdmin = (user) =>
-  Boolean(user?.email && user.email.toLowerCase() === adminEmail());
+export const adminUid = () =>
+  import.meta.env.VITE_ADMIN_UID?.trim() || '';
+
+export const isAdmin = (user) => {
+  const uid = adminUid();
+  if (uid) return Boolean(user?.uid && user.uid === uid);
+  return Boolean(user?.email && user.email.toLowerCase() === adminEmail());
+};
 
 export const getFirebaseServices = () => {
   if (!isFirebaseConfigured()) {

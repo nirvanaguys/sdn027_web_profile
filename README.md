@@ -29,7 +29,7 @@ Website ini dikembangkan sebagai solusi digitalisasi untuk SDN 027 Balikpapan Ut
 - **Program Akademik** — Kurikulum, jam belajar, ekstrakurikuler.
 - **Berita & Pengumuman** — Informasi terkini dari sekolah.
 - **Galeri Foto** — Dokumentasi kegiatan dan fasilitas sekolah.
-- **Dashboard Admin** — Login Firebase Authentication untuk menambah/menghapus berita dan galeri berbasis URL.
+- **Dashboard Admin** — Login Firebase Authentication untuk mengelola berita, galeri (upload foto langsung), konten Beranda/Profil/Akademik, foto kepala sekolah, dan foto kegiatan ekstrakurikuler.
 
 ---
 
@@ -60,6 +60,8 @@ Website ini dikembangkan sebagai solusi digitalisasi untuk SDN 027 Balikpapan Ut
 | Icons | Lucide React |
 | Autentikasi | Firebase Authentication (Email/Password) |
 | Database | Cloud Firestore |
+| Penyimpanan Foto | Cloudinary (upload via endpoint PHP `api/upload.php` dengan signature server) |
+| Backend Upload | PHP 8.2+ (shared hosting, tanpa Composer/Node server) |
 | Package Manager | npm |
 | Build Tool | Vite |
 
@@ -79,6 +81,7 @@ Sebelum menjalankan proyek ini, pastikan komputer kamu sudah terpasang:
 - ✅ **Code Editor** (direkomendasikan: [Visual Studio Code](https://code.visualstudio.com/))
 - ✅ **Windows Execution Policy** (jika menggunakan PowerShell)
   - Jalankan: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+- ✅ **PHP 8.2+** (opsional — hanya untuk mengetes upload foto `api/upload.php` secara lokal; hosting produksi wajib menyediakannya)
 
 ---
 
@@ -173,7 +176,7 @@ export default {
 1. Buat project di [Firebase Console](https://console.firebase.google.com/), lalu daftarkan **Web app**.
 2. Aktifkan **Authentication → Sign-in method → Email/Password**, kemudian buat pengguna admin dengan email yang akan digunakan untuk masuk.
 3. Buat database **Cloud Firestore**.
-4. Salin `.env.example` menjadi `.env`, lalu tempel setiap nilai dari objek konfigurasi Web App Firebase. Isi `VITE_ADMIN_EMAIL` dengan email pengguna admin tadi.
+4. Salin `.env.example` menjadi `.env`, lalu tempel setiap nilai dari objek konfigurasi Web App Firebase. Isi `VITE_ADMIN_EMAIL` dengan email pengguna admin tadi, dan (disarankan) `VITE_ADMIN_UID` dengan UID akun admin dari Firebase Console → Authentication → Users.
 
 ```bash
 cp .env.example .env
@@ -181,7 +184,7 @@ cp .env.example .env
 
 Di Windows, gunakan `copy .env.example .env`.
 
-5. Di Firebase Console, buka **Firestore Database → Rules**. Salin isi [firestore.rules](./firestore.rules), ganti `GANTI_DENGAN_EMAIL_ADMIN` dengan email admin yang sama persis, lalu publikasikan rules tersebut.
+5. Di Firebase Console, buka **Firestore Database → Rules**. Salin isi [firestore.rules](./firestore.rules), ganti `GANTI_DENGAN_UID_ADMIN` dengan UID admin (atau hapus baris UID bila hanya ingin pakai email), pastikan email pada rules sama persis dengan akun admin, lalu publikasikan. Untuk upload foto, lihat panduan lengkap di [docs/gallery-upload.md](./docs/gallery-upload.md) (butuh hosting dengan PHP 8.2+ dan file `api/upload.php`).
 
 Konfigurasi Web Firebase memang digunakan di aplikasi browser; keamanan penulisan data ditentukan oleh Firestore Security Rules, bukan dengan menyembunyikan `apiKey`. Lihat panduan resmi [setup Firebase Web](https://firebase.google.com/docs/web/setup) dan [Firebase Authentication Email/Password](https://firebase.google.com/docs/auth/web/password-auth).
 
@@ -200,13 +203,15 @@ Setelah muncul pesan seperti ini:
 
 Buka browser dan kunjungi **http://localhost:5173/** — website profil SDN 027 sudah berjalan! 🎉
 
+> ⚠️ **Catatan upload foto:** `npm run dev` (Vite) **tidak mengeksekusi PHP**, jadi fitur upload foto (galeri/beranda/profil/ekskul) akan gagal di dev server biasa dan menampilkan error. Test upload hanya di environment yang menjalankan `api/upload.php` (staging/hosting PHP atau server PHP lokal). Konten teks (berita, profil, akademik) tetap bisa dites di dev karena langsung ke Firebase.
+
 ### 6. Akses Dashboard Admin
 
-1. Klik tombol **"Admin"** di pojok kanan atas navbar.
-2. Login dengan email dan password pengguna Firebase Authentication yang Anda buat.
-3. Setelah login, Anda bisa menambah/menghapus berita serta menambah/menghapus entri galeri dengan URL gambar.
+1. Buka halaman admin melalui URL: **`http://localhost:5173/admin`** (tidak ada tombol Admin di navbar publik, memang sengaja).
+2. Login dengan email dan password pengguna Firebase Authentication yang Anda buat (hanya akun admin yang diizinkan; akun lain ditolak otomatis).
+3. Setelah login, tersedia 5 tab: **Berita** (CRUD), **Galeri** (upload foto JPG/PNG/WebP maks 5 MB), **Beranda**, **Profil** (termasuk foto kepala sekolah), dan **Akademik** (termasuk upload foto per ekstrakurikuler).
 
-> Data berita dan galeri dikelola melalui koleksi Firestore `news` dan `gallery`. Untuk membuat data awal, tambahkan berita atau galeri pertama melalui dashboard admin.
+> Data dikelola melalui koleksi Firestore `news`, `gallery`, dan `content` (dokumen `home`, `profile`, `academic`). Untuk membuat data awal, tambahkan langsung melalui dashboard admin.
 
 ---
 
@@ -240,66 +245,73 @@ npm install react-router-dom lucide-react
 
 ```
 sdn027_web_profile/
-├── public/              # File statis (favicon, gambar umum)
+├── api/
+│   ├── upload.php            # Endpoint PHP: verifikasi token admin + upload signature ke Cloudinary
+│   └── config.example.php    # Template config rahasia (salin ke luar web root, JANGAN commit yang berisi kunci)
+├── docs/
+│   └── gallery-upload.md     # Panduan deploy & verifikasi upload (Hostinger/hPanel)
+├── public/                   # File statis (favicon, gambar umum)
 ├── src/
-│   ├── components/      # Komponen React modular
-│   │   ├── Navbar.jsx   # Navigasi utama
-│   │   ├── Footer.jsx   # Footer dengan kontak
-│   │   ├── NewsCard.jsx # Kartu berita
-│   │   └── SectionHead.jsx # Header section reusable
-│   ├── pages/           # Halaman-halaman
-│   │   ├── Home.jsx     # Beranda
-│   │   ├── Profil.jsx   # Profil sekolah
-│   │   ├── Akademik.jsx # Program akademik
-│   │   ├── Berita.jsx   # Daftar berita
-│   │   ├── Galeri.jsx   # Galeri foto
-│   │   └── admin/
-│   │       ├── Login.jsx    # Halaman login admin
-│   │       └── Dashboard.jsx # Dashboard admin
+│   ├── components/           # Komponen React modular (Navbar, Footer, NewsCard, SectionHead)
+│   ├── pages/                # Halaman publik (Home, Profil, Akademik, Berita, Galeri)
+│   │   └── admin/            # Login, Dashboard (5 tab), GalleryPhotoField
 │   ├── data/
-│   │   ├── firebase.js  # Inisialisasi Firebase
-│   │   ├── AuthContext.jsx # Status sesi admin
-│   │   └── api.js       # Operasi Firebase Auth dan Firestore
-│   ├── App.jsx          # Router utama aplikasi
-│   ├── main.jsx         # Entry point React
-│   └── index.css        # Entry point CSS (Tailwind)
-├── index.html           # Template HTML utama
-├── firestore.rules      # Aturan akses Cloud Firestore
-├── package.json         # Daftar dependency & script
-├── tailwind.config.js   # Konfigurasi Tailwind
-├── postcss.config.js    # Konfigurasi PostCSS
-├── vite.config.js       # Konfigurasi Vite
-└── README.md            # File ini 📖
+│   │   ├── firebase.js       # Inisialisasi Firebase + aturan akun admin
+│   │   ├── api.js            # Operasi Firebase Auth dan Firestore
+│   │   ├── content.js        # Data default & normalisasi konten
+│   │   ├── galleryUpload.js  # Alur simpan-foto (validasi, upload, cleanup saat gagal)
+│   │   ├── galleryStorage.js # Client endpoint /api/upload.php (upload & hapus)
+│   │   ├── adminError.js     # Pesan error ramah untuk admin
+│   │   └── AuthContext.jsx   # Status sesi admin
+│   ├── App.jsx               # Router utama + proteksi rute admin
+│   ├── main.jsx              # Entry point React
+│   └── index.css             # Entry point CSS (Tailwind)
+├── tests/                    # Tes Node (npm test) + tes backend PHP
+├── index.html                # Template HTML utama
+├── firestore.rules           # Aturan akses Cloud Firestore (wajib dipublikasikan)
+├── storage.rules             # Aturan Firebase Storage (opsional; upload foto utama lewat Cloudinary)
+├── .env.example              # Contoh variabel environment
+├── package.json              # Daftar dependency & script
+├── tailwind.config.js        # Konfigurasi Tailwind
+├── postcss.config.js         # Konfigurasi PostCSS
+├── vite.config.js            # Konfigurasi Vite
+└── README.md                 # File ini 📖
 ```
 
 ---
 
-## 🚀 Cara Deploy (Opsional)
+## 🧪 Menjalankan Tes
 
-Cara termudah dan gratis adalah menggunakan **Vercel**:
-
-1. Buka https://vercel.com/ dan login dengan akun GitHub kamu.
-2. Klik **"Add New Project"** → Import repo `sdn027_web_profile`.
-3. Vercel akan otomatis mendeteksi ini proyek Vite. Klik **Deploy**.
-4. Tunggu 1–2 menit, dan website akan memiliki URL publik (contoh: `sdn027-web-profile.vercel.app`).
-
-### Alternatif: Netlify
-1. Buka https://www.netlify.com/ dan login dengan akun GitHub.
-2. Klik **"Add new site"** → **"Import an existing project"**.
-3. Pilih repo `sdn027_web_profile`.
-4. Build command: `npm run build`, Publish directory: `dist`.
-5. Klik **Deploy**.
-
----
-
-## 🌐 Build untuk Production
-
-Jika ingin membuat versi siap *deploy*:
 ```bash
-npm run build
+npm run lint     # oxlint (target: 0 warning)
+npm test         # 23 unit test alur admin/upload (tanpa koneksi cloud)
+npm run build    # build produksi ke dist/
 ```
 
-Hasil *build* akan muncul di folder `dist/` yang siap di-upload ke hosting statis.
+Opsional (butuh PHP 8.2+ dengan curl & fileinfo) — untuk memverifikasi `api/upload.php`:
+```bash
+php -l api/upload.php
+php tests/upload-backend.test.php
+```
+
+---
+
+## 🚀 Cara Deploy
+
+Website ini **butuh hosting dengan PHP 8.2+** agar upload foto berfungsi (endpoint `api/upload.php`), jadi hosting statis murni seperti Vercel/Netlify **tidak disarankan** — situs tetap jalan di sana, tetapi semua upload foto akan error.
+
+Rekomendasi (sesuai konfigurasi proyek ini): **shared hosting dengan hPanel (mis. Hostinger)**. Panduan langkah demi langkah — struktur folder `public_html`/`private`, config rahasia, aturan `.htaccess`, hingga checklist verifikasi pasca-deploy — ada di **[docs/gallery-upload.md](./docs/gallery-upload.md)**.
+
+Ringkasnya:
+1. `npm run build` → salin **isi `dist/`** ke `public_html/`.
+2. Salin `api/upload.php` ke `public_html/api/`.
+3. Salin `api/config.example.php` → `private/gallery-upload.php` (di LUAR `public_html`), isi kunci Firebase/Cloudinary + allowlist admin.
+4. Publikasikan `firestore.rules` di Firebase Console.
+5. **Nonaktifkan preset unsigned Cloudinary lama** (lihat docs — langkah wajib keamanan).
+6. Jalankan checklist smoke test pasca-deploy di docs.
+
+### Environment variables saat build
+Semua `VITE_*` diisi lewat konfigurasi build hosting masing-masing — nilainya ikut ter-bundle dan bersifat publik; jangan pernah menaruh secret Cloudinary/API di sana. Endpoint upload mengambil konfigurasi rahasia dari file private server (`private/gallery-upload.php`), bukan dari `.env`.
 
 ---
 

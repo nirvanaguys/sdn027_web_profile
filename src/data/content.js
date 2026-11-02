@@ -13,6 +13,7 @@ export const defaultProfile = {
   title: 'Mengenal SDN 027 Balikpapan Utara', sub: 'Lebih dari tiga dekade mendampingi anak-anak Balikpapan Utara tumbuh cerdas dan berkarakter.',
   history1: 'SDN 027 Balikpapan Utara berdiri pada awal 1990-an dan sejak itu menjadi rumah belajar bagi ratusan anak di sekitar kecamatan Balikpapan Utara. Dari ruang-ruang kelas yang sederhana, sekolah ini tumbuh menjadi sekolah dasar negeri berakreditasi A yang dikenal hangat dan ramah anak.',
   history2: 'Hari ini, dengan dukungan 25+ guru dan staf serta kepercayaan 450+ keluarga siswa, kami terus berbenah: memperkaya kegiatan belajar, memperkuat pendidikan karakter, dan membuka diri terhadap masyarakat melalui website ini.',
+  principalPhoto: '',
   principalQuote: 'Setiap anak yang masuk gerbang sekolah kami adalah amanah. Tugas kami bukan hanya mengajar, tetapi menemani mereka tumbuh menjadi pribadi yang baik.', principalName: 'Kepala Sekolah SDN 027',
   details: [['Status', 'Sekolah Negeri · Akreditasi A'], ['Kurikulum', 'Kurikulum Merdeka'], ['Jam Belajar', 'Senin–Sabtu, 07.00–13.00 WITA'], ['Lokasi', 'Balikpapan Utara, Kalimantan Timur']],
 };
@@ -21,7 +22,12 @@ export const defaultAcademic = {
   description: 'SDN 027 Balikpapan Utara menerapkan kurikulum nasional yang disesuaikan dengan kebutuhan peserta didik. Pembelajaran dirancang aktif: anak diajak mengamati, mencoba, dan berdiskusi — bukan sekadar mencatat.',
   approaches: ['Pembelajaran berbasis kegiatan dan proyek sederhana', 'Penguatan literasi & numerasi setiap pagi', 'Penilaian yang memperhatikan proses, bukan hanya nilai akhir'],
   schedule: [['Senin – Kamis', '07.00 – 13.00 WITA'], ['Jumat', '07.00 – 11.30 WITA'], ['Sabtu', 'Kegiatan ekstrakurikuler']],
-  extracurriculars: [['Pramuka', 'Membentuk karakter, kemandirian, dan jiwa kepemimpinan.'], ['Olahraga', 'Sepak bola, bulu tangkis, dan senam pagi setiap pekan.'], ['Seni & Tari', 'Tari tradisional, musik, dan prakarya untuk melatih kreativitas.'], ['Klub Sains', 'Persiapan olimpiade sains dan matematika tingkat kota.']],
+  extracurriculars: [
+    ['Pramuka', 'Membentuk karakter, kemandirian, dan jiwa kepemimpinan.', ''],
+    ['Olahraga', 'Sepak bola, bulu tangkis, dan senam pagi setiap pekan.', ''],
+    ['Seni & Tari', 'Tari tradisional, musik, dan prakarya untuk melatih kreativitas.', ''],
+    ['Klub Sains', 'Persiapan olimpiade sains dan matematika tingkat kota.', ''],
+  ],
 };
 
 export const defaultNews = [
@@ -91,7 +97,8 @@ export const defaultGallery = [
 export const mergeContent = (defaults, data) => ({ ...defaults, ...data });
 
 const toPairs = (items, first, second) => (items || []).map((item) => Array.isArray(item) ? item : [item[first] || '', item[second] || '']);
+const toTriples = (items, first, second, third) => (items || []).map((item) => Array.isArray(item) ? [item[0] || '', item[1] || '', item[2] || ''] : [item[first] || '', item[second] || '', item[third] || '']);
 export const normalizeHome = (data) => ({ ...data, stats: toPairs(data.stats, 'value', 'label') });
 export const normalizeProfile = (data) => ({ ...data, details: toPairs(data.details, 'label', 'value') });
-export const normalizeAcademic = (data) => ({ ...data, schedule: toPairs(data.schedule, 'day', 'value'), extracurriculars: toPairs(data.extracurriculars, 'title', 'description') });
+export const normalizeAcademic = (data) => ({ ...data, schedule: toPairs(data.schedule, 'day', 'value'), extracurriculars: toTriples(data.extracurriculars, 'title', 'description', 'image') });
 

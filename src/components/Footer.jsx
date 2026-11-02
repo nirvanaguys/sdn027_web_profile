@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { GraduationCap, MapPin, Mail, Phone, Clock } from "lucide-react";
+import { GraduationCap, MapPin, Phone, Clock } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -31,11 +31,16 @@ export default function Footer() {
         <div>
           <h3 className="font-display text-lg font-bold text-white">Kontak Sekolah</h3>
           <ul className="mt-4 space-y-3 text-sm">
-            {/* Ganti dengan data kontak asli sekolah sebelum demo */}
-            <li className="flex gap-3"><MapPin size={18} className="mt-0.5 shrink-0 text-honey-400" /> Jl. ................, Balikpapan Utara, Kalimantan Timur</li>
-            <li className="flex gap-3"><Mail size={18} className="mt-0.5 shrink-0 text-honey-400" /> sdn027balikpapanutra@sch.id</li>
-            <li className="flex gap-3"><Phone size={18} className="mt-0.5 shrink-0 text-honey-400" /> (0542) .......</li>
-            <li className="flex gap-3"><Clock size={18} className="mt-0.5 shrink-0 text-honey-400" /> Senin–Sabtu: 07.00–13.00 WITA</li>
+            <li className="flex gap-3"><MapPin size={18} className="mt-0.5 shrink-0 text-honey-400" /> Jl. Batu Ratna No.23, RT.15, Karang Joang, Kec. Balikpapan Utara, Kota Balikpapan, Kalimantan Timur 76127</li>
+            <li className="flex gap-3"><Phone size={18} className="mt-0.5 shrink-0 text-honey-400" /> 085247100635 </li>
+            <li className="flex gap-3">
+              <Clock size={18} className="mt-0.5 shrink-0 text-honey-400" /> 
+              <div>
+                    <p>Senin – Sabtu</p>
+                    <p className="text-white/70">Pagi: 07.15–12.40 WITA</p>
+                    <p className="text-white/70">Siang: 13.00–17.00 WITA</p>
+              </div>
+            </li>
           </ul>
         </div>
       </div>

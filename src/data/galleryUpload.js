@@ -8,11 +8,37 @@ export function validateGalleryFile(file) {
   }
 }
 
-export async function saveHomePhoto(data, file, { upload, save }) {
+async function cleanupUpload(photo, remove) {
+  if (!photo || typeof remove !== 'function') return;
+  try {
+    await remove(photo.path);
+  } catch (cleanupError) {
+    console.warn('Gagal membersihkan upload yang belum tersimpan:', cleanupError);
+  }
+}
+
+export async function saveHomePhoto(data, file, { upload, save, remove }) {
   if (!file) return save(data);
   validateGalleryFile(file);
   const photo = await upload(file);
-  return save({ ...data, heroImage: photo.url });
+  try {
+    return await save({ ...data, heroImage: photo.url });
+  } catch (error) {
+    await cleanupUpload(photo, remove);
+    throw error;
+  }
+}
+
+export async function saveProfilePhoto(data, file, { upload, save, remove }) {
+  if (!file) return save(data);
+  validateGalleryFile(file);
+  const photo = await upload(file);
+  try {
+    return await save({ ...data, principalPhoto: photo.url });
+  } catch (error) {
+    await cleanupUpload(photo, remove);
+    throw error;
+  }
 }
 
 export async function saveGalleryPhoto({ judul, file, url }, { upload, save, remove }) {
@@ -22,11 +48,7 @@ export async function saveGalleryPhoto({ judul, file, url }, { upload, save, rem
   try {
     return await save({ judul, url: photo.url });
   } catch (error) {
-    try {
-      await remove(photo.path);
-    } catch (cleanupError) {
-      console.warn('Gagal membersihkan upload yang belum tersimpan:', cleanupError);
-    }
+    await cleanupUpload(photo, remove);
     throw error;
   }
 }

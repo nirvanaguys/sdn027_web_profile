@@ -16,12 +16,14 @@ const unggulan = [
 export default function Home() {
   const [berita, setBerita] = useState([]);
   const [content, setContent] = useState(defaultHome);
-  useEffect(() => { getNews().then((items) => setBerita(items.slice(0, 3))).catch(() => setBerita([])); }, []);
-  useEffect(() => { getContent('home').then((data) => data && setContent(mergeContent(defaultHome, normalizeHome(data)))).catch(() => {}); }, []);
+  const [newsError, setNewsError] = useState('');
+  const [contentError, setContentError] = useState('');
+  useEffect(() => { getNews().then((items) => setBerita(items.slice(0, 3))).catch((error) => { setBerita([]); setNewsError(error.message); }); }, []);
+  useEffect(() => { getContent('home').then((data) => data && setContent(mergeContent(defaultHome, normalizeHome(data)))).catch((error) => setContentError(error.message)); }, []);
 
   return (
     <div>
-      {/* ===== HERO ===== */}
+      {(newsError || contentError) && <p role="alert" className="container-page pt-6 text-center text-red-600">{newsError || contentError}</p>}
       <section className="relative overflow-hidden py-14 md:py-20">
         <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-honey-100" aria-hidden="true" />
         <div className="absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-primary-100" aria-hidden="true" />

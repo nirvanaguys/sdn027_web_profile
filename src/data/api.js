@@ -1,7 +1,7 @@
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { adminEmail, getFirebaseServices, isAdmin, isFirebaseConfigured } from './firebase';
-import { defaultGallery, defaultNews } from './content';
+
 
 const mapDocuments = (snapshot) => snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
 const readCollection = async (name, compare) => {
@@ -40,14 +40,7 @@ export const getSession = () => {
 };
 
 export const getNews = async () => {
-  if (!isFirebaseConfigured()) return defaultNews;
-  try {
-    const data = await readCollection('news', (a, b) => (b.tanggal || '').localeCompare(a.tanggal || ''));
-    return data.length > 0 ? data : defaultNews;
-  } catch (err) {
-    console.warn('Gagal memuat berita dari Firebase, menampilkan data default:', err);
-    return defaultNews;
-  }
+  return readCollection('news', (a, b) => (b.tanggal || '').localeCompare(a.tanggal || ''));
 };
 
 export const createNews = async ({ judul, isi, kategori, tanggal }) => {
@@ -60,14 +53,7 @@ export const deleteNews = (id) => deleteDoc(doc(getFirebaseServices().db, 'news'
 export const updateNews = (id, { judul, isi, kategori, tanggal }) => updateDoc(doc(getFirebaseServices().db, 'news', id), { judul: judul.trim(), isi: isi.trim(), kategori: kategori.trim(), tanggal });
 
 export const getGallery = async () => {
-  if (!isFirebaseConfigured()) return defaultGallery;
-  try {
-    const data = await readCollection('gallery', (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-    return data.length > 0 ? data : defaultGallery;
-  } catch (err) {
-    console.warn('Gagal memuat galeri dari Firebase, menampilkan data default:', err);
-    return defaultGallery;
-  }
+  return readCollection('gallery', (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 };
 
 export const createGallery = async ({ judul, url }) => {

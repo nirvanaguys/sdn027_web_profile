@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Compass, Medal, Music, FlaskConical, Clock } from "lucide-react";
+import { Award, Camera, Clock, FlaskConical, Globe, Hand, Landmark, Music, ShieldCheck, Trophy, Volleyball, Whistle } from "lucide-react";
 import SectionHead from "../components/SectionHead";
 import { getContent } from "../data/api";
 import { defaultAcademic, mergeContent, normalizeAcademic } from "../data/content";
@@ -7,8 +7,20 @@ import { defaultAcademic, mergeContent, normalizeAcademic } from "../data/conten
 export default function Akademik() {
   const [content, setContent] = useState(defaultAcademic);
   useEffect(() => { getContent('academic').then((data) => data && setContent(mergeContent(defaultAcademic, normalizeAcademic(data)))).catch(() => {}); }, []);
-  const icons = [Compass, Medal, Music, FlaskConical];
-  const colors = ["bg-leaf-50 text-leaf-600", "bg-honey-50 text-honey-600", "bg-primary-50 text-primary-600", "bg-leaf-50 text-leaf-600"];
+  const iconMap = {
+    futsal: Whistle,
+    voli: Volleyball,
+    volleyball: Volleyball,
+    handball: Hand,
+    pramuka: Landmark,
+    tari: Music,
+    musik: Music,
+    sains: FlaskConical,
+    science: FlaskConical,
+    olahraga: Trophy,
+  };
+  const fallbackIcons = [ShieldCheck, Award, Globe, Camera, Trophy, FlaskConical];
+  const colors = ["bg-leaf-50 text-leaf-600", "bg-honey-50 text-honey-600", "bg-primary-50 text-primary-600", "bg-leaf-50 text-leaf-600", "bg-honey-50 text-honey-600", "bg-primary-50 text-primary-600"];
   return (
     <div className="container-page py-14 md:py-20">
       <SectionHead
@@ -47,13 +59,21 @@ export default function Akademik() {
 
       <h2 className="mt-14 font-display text-2xl font-extrabold text-primary-900">Ekstrakurikuler</h2>
       <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {content.extracurriculars.map(([judul, isi], index) => { const Icon = icons[index] || Compass; return (
-          <div key={judul} className="card p-6 transition duration-200 hover:-translate-y-1 hover:shadow-md">
-            <span className={`grid h-12 w-12 place-items-center rounded-2xl ${colors[index] || colors[0]}`}><Icon size={24} /></span>
-            <h3 className="mt-4 font-display text-lg font-bold text-primary-900">{judul}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-ink/60">{isi}</p>
-          </div>
-        ); })}
+        {content.extracurriculars.map(([judul, isi, image], index) => {
+          const key = `${judul} ${isi}`.toLowerCase();
+          const Icon = Object.entries(iconMap).find(([token]) => key.includes(token))?.[1] || fallbackIcons[index % fallbackIcons.length];
+          return (
+            <div key={`${judul}-${index}`} className="card p-6 transition duration-200 hover:-translate-y-1 hover:shadow-md">
+              {image ? (
+                <img src={image} alt={judul} className="h-32 w-full rounded-2xl object-cover" />
+              ) : (
+                <span className={`grid h-12 w-12 place-items-center rounded-2xl ${colors[index % colors.length]}`}><Icon size={24} /></span>
+              )}
+              <h3 className="mt-4 font-display text-lg font-bold text-primary-900">{judul}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-ink/60">{isi}</p>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
