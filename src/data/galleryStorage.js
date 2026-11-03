@@ -13,7 +13,9 @@ export async function uploadGalleryPhoto(file) {
   try {
     const response = await fetch('/api/upload.php', {
       method: 'POST',
-      Authorization: `Bearer ${token}`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       body,
       signal: controller.signal,
       credentials: 'same-origin',
